@@ -1,8 +1,10 @@
-# TODO: update Readme, upload to github, create directories for pictures locally
-import os, errno, picamera, datetime, boto3, yaml, io
+# TODO: use not hardcoded path
+import os, errno, picamera, datetime, boto3, yaml, io, time, shutil
 from botocore.client import Config
+from PIL import Image
 
-ROOT_DIR = "/home/pi/sentiel/pictures/"
+now = datetime.datetime.now()
+ROOT_DIR = "/home/pi/sentiel/pictures/" + now.strftime("%Y-%m-%d") + "/"
 
 # Create root Dir for pictures
 try:
@@ -10,13 +12,24 @@ try:
 except OSError as e:
     if e.errno != errno.EEXIST:
         raise
+try:
+    os.makedirs(ROOT_DIR + "thumbnails")
+except OSError as e:
+    if e.errno != errno.EEXIST:
+        raise
 
 # Take a picture
 camera = picamera.PiCamera()
 camera.vflip = True
-now = datetime.datetime.now()
 file_name = now.strftime("%Y-%m-%d_%H:%M:%S") + ".jpg"
 camera.capture(ROOT_DIR + file_name)
+print "Made a picture " + ROOT_DIR + file_name
+# Create thumbnail
+size = 128, 128
+im = Image.open(ROOT_DIR + file_name)
+im.thumbnail(size)
+im.save(ROOT_DIR + 'thumbnails/' + file_name, "JPEG")
+print "Saved thumbnail " + ROOT_DIR + 'thumnails/' + file_name
 
 # Read config YAML file
 with open("config.yml", 'r') as stream:
@@ -31,11 +44,41 @@ client = session.client('s3',
                         aws_secret_access_key=config_loaded['aws_secret_access_key'])
 
 upload_filename = 'sentiels/' + config_loaded['sentiel_name'] + '/pictures/' + now.strftime("%Y-%m-%d") + '/' + file_name
+upload_th_filename = 'sentiels/' + config_loaded['sentiel_name'] + '/pictures/' + now.strftime("%Y-%m-%d") + '/thumbnails/' + file_name
 client.upload_file(ROOT_DIR + file_name,
                    config_loaded['bucket'],
                    upload_filename,
                    ExtraArgs={'ACL': 'public-read'})
+print "Uploaded " + upload_filename
+
+client.upload_file(ROOT_DIR + 'thumbnails/' + file_name,
+                   config_loaded['bucket'],
+                   upload_th_filename,
+                   ExtraArgs={'ACL': 'public-read'})
+print "Uploaded " + upload_th_filename
 
 # Cleanup local files
+for r,d,f in os.walk("/home/pi/sentiel/pictures/"):
+    for dir in d:
+        if dir != 'thumbnails':
+            date = datetime.datetime.strptime(dir.replace(".jpg",""), "%Y-%m-%d")
+            if (now - date).days > config_loaded['expire_days']:
+                try:
+                    print "removing ",os.path.join(r,dir)
+                    shutil.rmtree(os.path.join(r,dir))
+                except Exception,e:
+                    print e
+                    pass
+                else: 
+                    print "Removed " + os.path.join(r,dir)
 
 # Cleanup S3
+result = client.list_objects(Bucket=config_loaded['bucket'], Prefix='sentiels/' + config_loaded['sentiel_name'] + '/pictures/', Delimiter='/')
+for o in result.get('CommonPrefixes'):
+    dir = o.get('Prefix')
+    date = datetime.datetime.strptime(dir.replace('sentiels/' + config_loaded['sentiel_name'] + '/pictures/',""), "%Y-%m-%d/")
+    if (now - date).days > config_loaded['expire_days']:
+        res = client.list_objects(Bucket=config_loaded['bucket'], Prefix=dir)    
+        for obj in res.get('Contents'):
+            print("Deleting from S3 " + obj.get('Key'))
+            client.delete_object(Bucket=config_loaded['bucket'], Key=obj.get('Key'))
