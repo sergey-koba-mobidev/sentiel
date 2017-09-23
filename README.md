@@ -23,5 +23,9 @@ expire_days: 7
 ## Run
 - `python sentiel.py`
 
+## Add to crontab
+- `crontab -e`
+- add line `* * * * * cd /home/pi/Projects/sentiel && python sentiel.py >> log.txt`
+
 ## Pictures
 All pictures are stored in `/home/pi/sentiel` folder
