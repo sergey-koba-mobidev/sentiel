@@ -1,4 +1,4 @@
-# Sentiel
+# Sentinel
 A Raspberry Pi Python based scypt, which takes picture and uploads it to S3 bucket.
 Can be run by crontab on regular basis.
 
@@ -14,18 +14,18 @@ region_name:  'nyc3'
 endpoint_url: 'https://nyc3.digitaloceanspaces.com'
 aws_access_key_id: '...'
 aws_secret_access_key: '...'
-s3_folder: 'sentiel'
 bucket: 'my-bucket'
 sentiel_name: 'aragorn'
 expire_days: 7
+save_dir: '/home/pi/sentinel'
 ```
 
 ## Run
-- `python sentiel.py`
+- `python sentinel.py`
 
 ## Add to crontab
 - `crontab -e`
-- add line `* * * * * cd /home/pi/Projects/sentiel && python sentiel.py >> log.txt`
+- add line `* * * * * cd /home/pi/Projects/sentinel && python sentinel.py >> log.txt`
 
 ## Pictures
-All pictures are stored in `/home/pi/sentiel` folder
+All pictures are stored in `save_dir` folder

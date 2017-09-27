@@ -1,10 +1,13 @@
-# TODO: use not hardcoded path
 import os, errno, picamera, datetime, boto3, yaml, io, time, shutil
 from botocore.client import Config
 from PIL import Image
 
+# Read config YAML file
+with open("config.yml", 'r') as stream:
+    config_loaded = yaml.load(stream)
+
 now = datetime.datetime.now()
-ROOT_DIR = "/home/pi/sentiel/pictures/" + now.strftime("%Y-%m-%d") + "/"
+ROOT_DIR = config_loaded['save_dir'] + "/pictures/" + now.strftime("%Y-%m-%d") + "/"
 
 # Create root Dir for pictures
 try:
@@ -31,10 +34,6 @@ im.thumbnail(size)
 im.save(ROOT_DIR + 'thumbnails/' + file_name, "JPEG")
 print "Saved thumbnail " + ROOT_DIR + 'thumnails/' + file_name
 
-# Read config YAML file
-with open("config.yml", 'r') as stream:
-    config_loaded = yaml.load(stream)
-
 # Upload picture to S3
 session = boto3.session.Session()
 client = session.client('s3',
@@ -43,8 +42,8 @@ client = session.client('s3',
                         aws_access_key_id=config_loaded['aws_access_key_id'],
                         aws_secret_access_key=config_loaded['aws_secret_access_key'])
 
-upload_filename = 'sentiels/' + config_loaded['sentiel_name'] + '/pictures/' + now.strftime("%Y-%m-%d") + '/' + file_name
-upload_th_filename = 'sentiels/' + config_loaded['sentiel_name'] + '/pictures/' + now.strftime("%Y-%m-%d") + '/thumbnails/' + file_name
+upload_filename = 'sentinels/' + config_loaded['sentiel_name'] + '/pictures/' + now.strftime("%Y-%m-%d") + '/' + file_name
+upload_th_filename = 'sentinels/' + config_loaded['sentiel_name'] + '/pictures/' + now.strftime("%Y-%m-%d") + '/thumbnails/' + file_name
 client.upload_file(ROOT_DIR + file_name,
                    config_loaded['bucket'],
                    upload_filename,
@@ -58,7 +57,7 @@ client.upload_file(ROOT_DIR + 'thumbnails/' + file_name,
 print "Uploaded " + upload_th_filename
 
 # Cleanup local files
-for r,d,f in os.walk("/home/pi/sentiel/pictures/"):
+for r,d,f in os.walk(config_loaded['save_dir'] + "/pictures/"):
     for dir in d:
         if dir != 'thumbnails':
             date = datetime.datetime.strptime(dir.replace(".jpg",""), "%Y-%m-%d")
@@ -73,10 +72,10 @@ for r,d,f in os.walk("/home/pi/sentiel/pictures/"):
                     print "Removed " + os.path.join(r,dir)
 
 # Cleanup S3
-result = client.list_objects(Bucket=config_loaded['bucket'], Prefix='sentiels/' + config_loaded['sentiel_name'] + '/pictures/', Delimiter='/')
+result = client.list_objects(Bucket=config_loaded['bucket'], Prefix='sentinels/' + config_loaded['sentiel_name'] + '/pictures/', Delimiter='/')
 for o in result.get('CommonPrefixes'):
     dir = o.get('Prefix')
-    date = datetime.datetime.strptime(dir.replace('sentiels/' + config_loaded['sentiel_name'] + '/pictures/',""), "%Y-%m-%d/")
+    date = datetime.datetime.strptime(dir.replace('sentinels/' + config_loaded['sentiel_name'] + '/pictures/',""), "%Y-%m-%d/")
     if (now - date).days > config_loaded['expire_days']:
         res = client.list_objects(Bucket=config_loaded['bucket'], Prefix=dir)    
         for obj in res.get('Contents'):
