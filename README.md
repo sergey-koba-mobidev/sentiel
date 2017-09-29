@@ -3,12 +3,8 @@ A Raspberry Pi Python based scypt, which takes picture and uploads it to S3 buck
 Can be run by crontab on regular basis.
 
 ## Install
-- `git clone git@github.com:sergey-koba-mobidev/sentinel.git`
-- `pip install boto3`
-- `pip install pyyaml`
-- `sudo apt-get install libjpeg-dev`
-- `pip install Pillow`
-- create `config.yml`
+- run `wget -O - https://raw.githubusercontent.com/sergey-koba-mobidev/sentinel/master/install.sh | sh`
+- modify `config.yml`
 
 ```yml
 region_name:  'nyc3'
