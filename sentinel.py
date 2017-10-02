@@ -24,6 +24,9 @@ except OSError as e:
 # Take a picture
 camera = picamera.PiCamera()
 camera.vflip = True
+camera.hflip = True
+camera.brightness = config_loaded['brightness']
+camera.contrast = config_loaded['contrast']
 file_name = now.strftime("%Y-%m-%d_%H:%M:%S") + ".jpg"
 camera.capture(ROOT_DIR + file_name)
 print "Made a picture " + ROOT_DIR + file_name

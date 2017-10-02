@@ -15,6 +15,8 @@ bucket: 'my-bucket'
 sentiel_name: 'aragorn'
 expire_days: 7
 save_dir: '/home/pi/sentinel'
+brightness: 70
+contrast: 70
 ```
 
 ## Run
