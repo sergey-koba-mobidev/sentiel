@@ -24,8 +24,8 @@ def main():
 
     # Take a picture
     camera = picamera.PiCamera()
-    camera.vflip = True
-    camera.hflip = True
+    camera.vflip = config_loaded['vflip']
+    camera.hflip = config_loaded['hflip']
     camera.brightness = config_loaded['brightness']
     camera.contrast = config_loaded['contrast']
     file_name = now.strftime("%Y-%m-%d_%H:%M:%S") + ".jpg"

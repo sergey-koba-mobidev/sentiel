@@ -5,3 +5,4 @@ git pull
 
 # Run the Sentinel
 python sentinel.py
+
