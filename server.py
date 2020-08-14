@@ -53,10 +53,10 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
     def do_GET(self):
         global auth_key
 
-        if self.headers.getheader('Authorization') == None:
+        if self.headers.get('Authorization') == None:
             self.do_AUTHHEAD()
             self.wfile.write('no auth header received')
-        elif self.headers.getheader('Authorization') == 'Basic ' + auth_key:
+        elif self.headers.get('Authorization') == 'Basic ' + auth_key:
             if self.path == '/':
                 self.send_response(301)
                 self.send_header('Location', '/index.html')
@@ -95,7 +95,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 self.end_headers()
         else:
             self.do_AUTHHEAD()
-            self.wfile.write(self.headers.getheader('Authorization'))
+            self.wfile.write(self.headers.get('Authorization'))
             self.wfile.write('not authenticated')
 
 class StreamingServer(socketserver.ThreadingMixIn, server.HTTPServer):
