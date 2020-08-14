@@ -19,8 +19,6 @@ PAGE="""\
 </html>
 """
 
-auth_key = ""
-
 class StreamingOutput(object):
     def __init__(self):
         self.frame = None
@@ -51,12 +49,11 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         self.end_headers()
 
     def do_GET(self):
-        global auth_key
-
+        key = self.server.get_auth_key()
         if self.headers.get('Authorization') == None:
             self.do_AUTHHEAD()
-            self.wfile.write(b'no auth header received')
-        elif self.headers.get('Authorization') == 'Basic ' + auth_key:
+            self.wfile.write(bytes('no auth header received', 'utf-8'))
+        elif self.headers.get('Authorization') == 'Basic ' + str(key):
             if self.path == '/':
                 self.send_response(301)
                 self.send_header('Location', '/index.html')
@@ -95,12 +92,19 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 self.end_headers()
         else:
             self.do_AUTHHEAD()
-            self.wfile.write(self.headers.get('Authorization'))
-            self.wfile.write(b'not authenticated')
+            self.wfile.write(bytes('not authenticated', 'utf-8'))
 
 class StreamingServer(socketserver.ThreadingMixIn, server.HTTPServer):
     allow_reuse_address = True
     daemon_threads = True
+
+    def set_auth(self, username, password):
+        self.key = base64.b64encode(
+            bytes('%s:%s' % (username, password), 'utf-8')).decode('ascii')
+
+    def get_auth_key(self):
+        return self.key
+
 
 with picamera.PiCamera(resolution='640x480', framerate=24) as camera:
     output = StreamingOutput()
@@ -111,11 +115,10 @@ with picamera.PiCamera(resolution='640x480', framerate=24) as camera:
     camera.brightness = config_loaded['brightness']
     camera.contrast = config_loaded['contrast']
     camera.start_recording(output, format='mjpeg')
-    key = config_loaded['auth_user'] + ":" + config_loaded['auth_pass']
-    auth_key = base64.b64encode(key.encode("utf-8"))
     try:
         address = ('', 80)
         server = StreamingServer(address, StreamingHandler)
+        server.set_auth(config_loaded['auth_user'], config_loaded['auth_pass'])
         server.serve_forever()
     finally:
         camera.stop_recording()
