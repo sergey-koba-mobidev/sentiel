@@ -6,6 +6,8 @@ from threading import Condition
 from http import server
 import yaml
 import base64
+import datetime
+import os
 
 PAGE="""\
 <html>
@@ -48,6 +50,23 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         self.send_header('Content-type', 'text/html')
         self.end_headers()
 
+    def get_pictures_root(self, now):
+      root_dir = self.get_config['save_dir'] + "/pictures/" + now.strftime("%Y-%m-%d") + "/"
+
+      # Create root Dir for pictures
+      try:
+          os.makedirs(root_dir)
+      except OSError as e:
+          if e.errno != errno.EEXIST:
+              raise
+      try:
+          os.makedirs(root_dir + "thumbnails")
+      except OSError as e:
+          if e.errno != errno.EEXIST:
+              raise
+
+      return root_dir
+
     def do_GET(self):
         key = self.server.get_auth_key()
         if self.headers.get('Authorization') == None:
@@ -60,6 +79,18 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 self.end_headers()
             elif self.path == '/index.html':
                 content = PAGE.encode('utf-8')
+                self.send_response(200)
+                self.send_header('Content-Type', 'text/html')
+                self.send_header('Content-Length', len(content))
+                self.end_headers()
+                self.wfile.write(content)
+            elif self.path == '/take_snapshot':
+                now = datetime.datetime.now()
+                file_name = now.strftime("%Y-%m-%d_%H:%M:%S") + ".jpg"
+                root_dir = self.get_pictures_root(now)
+                file_path = root_dir + file_name
+                camera.capture(file_path, use_video_port=True)
+                content = file_path.encode('utf-8')
                 self.send_response(200)
                 self.send_header('Content-Type', 'text/html')
                 self.send_header('Content-Length', len(content))
@@ -104,6 +135,12 @@ class StreamingServer(socketserver.ThreadingMixIn, server.HTTPServer):
 
     def get_auth_key(self):
         return self.key
+    
+    def set_config(self, config):
+        self.config = config
+    
+    def get_config(self):
+        return self.config
 
 
 with picamera.PiCamera(resolution='640x480', framerate=24) as camera:
@@ -119,6 +156,7 @@ with picamera.PiCamera(resolution='640x480', framerate=24) as camera:
         address = ('', 80)
         server = StreamingServer(address, StreamingHandler)
         server.set_auth(config_loaded['auth_user'], config_loaded['auth_pass'])
+        server.set_config(config_loaded)
         server.serve_forever()
     finally:
         camera.stop_recording()

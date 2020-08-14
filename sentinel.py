@@ -29,10 +29,7 @@ def main():
     camera.brightness = config_loaded['brightness']
     camera.contrast = config_loaded['contrast']
     file_name = now.strftime("%Y-%m-%d_%H:%M:%S") + ".jpg"
-    if config_loaded['use_video_port']:
-        camera.capture(ROOT_DIR + file_name, use_video_port=True)
-    else:
-        camera.capture(ROOT_DIR + file_name)
+    camera.capture(ROOT_DIR + file_name)
     print "Made a picture " + ROOT_DIR + file_name
     # Create thumbnail
     size = 128, 128
