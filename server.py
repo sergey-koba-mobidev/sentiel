@@ -55,7 +55,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
         if self.headers.get('Authorization') == None:
             self.do_AUTHHEAD()
-            self.wfile.write('no auth header received')
+            self.wfile.write(b'no auth header received')
         elif self.headers.get('Authorization') == 'Basic ' + auth_key:
             if self.path == '/':
                 self.send_response(301)
@@ -96,7 +96,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         else:
             self.do_AUTHHEAD()
             self.wfile.write(self.headers.get('Authorization'))
-            self.wfile.write('not authenticated')
+            self.wfile.write(b'not authenticated')
 
 class StreamingServer(socketserver.ThreadingMixIn, server.HTTPServer):
     allow_reuse_address = True
