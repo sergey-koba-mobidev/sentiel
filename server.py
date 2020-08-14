@@ -8,6 +8,7 @@ import yaml
 import base64
 import datetime
 import os
+import errno
 
 PAGE="""\
 <html>
