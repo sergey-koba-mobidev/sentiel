@@ -29,6 +29,7 @@ auth_pass: Pass # for server.py
 ## Add to crontab
 - `crontab -e`
 - add line `* * * * * cd /home/pi/Projects/sentinel && ./sentinel.sh >> log.txt`
+- add line `@reboot sleep 60 && cd /home/pi/Projects/sentinel && sudo python3 server.py &` to run http server on port 80
 
 ## Pictures
 All pictures are stored in `save_dir` folder
