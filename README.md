@@ -19,6 +19,8 @@ brightness: 50
 contrast: 50
 vflip: false
 hflip: false
+auth_user: User # for server.py
+auth_pass: Pass # for server.py
 ```
 
 ## Run

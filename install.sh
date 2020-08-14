@@ -14,6 +14,7 @@ sudo apt-get -y install libjpeg-dev
 pip install boto3
 pip install pyyaml
 pip install Pillow
+sudo python3 -m pip install pyyaml # for server.py
 
 echo "${green}Create default config...${reset}"
 touch config.yml
