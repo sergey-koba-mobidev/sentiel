@@ -4,6 +4,7 @@ import logging
 import socketserver
 from threading import Condition
 from http import server
+import yaml
 
 PAGE="""\
 <html>
@@ -79,6 +80,12 @@ class StreamingServer(socketserver.ThreadingMixIn, server.HTTPServer):
 
 with picamera.PiCamera(resolution='640x480', framerate=24) as camera:
     output = StreamingOutput()
+    with open("config.yml", 'r') as stream:
+        config_loaded = yaml.load(stream)
+    camera.vflip = config_loaded['vflip']
+    camera.hflip = config_loaded['hflip']
+    camera.brightness = config_loaded['brightness']
+    camera.contrast = config_loaded['contrast']
     camera.start_recording(output, format='mjpeg')
     try:
         address = ('', 80)
