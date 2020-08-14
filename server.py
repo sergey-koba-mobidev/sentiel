@@ -10,10 +10,10 @@ import base64
 PAGE="""\
 <html>
 <head>
-<title>picamera MJPEG streaming demo</title>
+<title>Alko</title>
 </head>
 <body>
-<h1>PiCamera MJPEG Streaming Demo</h1>
+<h1>Alko Home</h1>
 <img src="stream.mjpg" width="640" height="480" />
 </body>
 </html>
@@ -111,7 +111,8 @@ with picamera.PiCamera(resolution='640x480', framerate=24) as camera:
     camera.brightness = config_loaded['brightness']
     camera.contrast = config_loaded['contrast']
     camera.start_recording(output, format='mjpeg')
-    auth_key = base64.b64encode(config_loaded['auth_user'] + ":" + config_loaded['auth_pass'])
+    key = config_loaded['auth_user'] + ":" + config_loaded['auth_pass']
+    auth_key = base64.b64encode(key.encode("utf-8"))
     try:
         address = ('', 80)
         server = StreamingServer(address, StreamingHandler)
