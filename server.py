@@ -51,7 +51,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         self.end_headers()
 
     def get_pictures_root(self, now):
-      config = self.get_config()
+      config = self.server.get_config()
       root_dir = config['save_dir'] + "/pictures/" + now.strftime("%Y-%m-%d") + "/"
 
       # Create root Dir for pictures
