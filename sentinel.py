@@ -1,6 +1,7 @@
-import os, errno, picamera, datetime, boto3, yaml, io, time, shutil
+import os, errno, picamera, datetime, boto3, yaml, io, time, shutil, requests
 from botocore.client import Config
 from PIL import Image
+from requests.auth import HTTPBasicAuth
 
 def main():
     # Read config YAML file
@@ -23,13 +24,20 @@ def main():
             raise
 
     # Take a picture
-    camera = picamera.PiCamera()
-    camera.vflip = config_loaded['vflip']
-    camera.hflip = config_loaded['hflip']
-    camera.brightness = config_loaded['brightness']
-    camera.contrast = config_loaded['contrast']
-    file_name = now.strftime("%Y-%m-%d_%H:%M:%S") + ".jpg"
-    camera.capture(ROOT_DIR + file_name)
+    try:
+        camera = picamera.PiCamera()
+        camera.vflip = config_loaded['vflip']
+        camera.hflip = config_loaded['hflip']
+        camera.brightness = config_loaded['brightness']
+        camera.contrast = config_loaded['contrast']
+        file_name = now.strftime("%Y-%m-%d_%H:%M:%S") + ".jpg"
+        camera.capture(ROOT_DIR + file_name)
+    except BaseException as error:
+        if config_loaded['server_mode']:
+            r = requests.get('http://localhost/take_snapshot', auth=HTTPBasicAuth(config_loaded['auth_user'], config_loaded['auth_pass']))
+            file_name = r.text.replace(ROOT_DIR, '')
+        else:
+            print('An exception occurred: {}'.format(error))
     print "Made a picture " + ROOT_DIR + file_name
     # Create thumbnail
     size = 128, 128
