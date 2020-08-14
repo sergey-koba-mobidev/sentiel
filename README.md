@@ -21,6 +21,7 @@ vflip: false
 hflip: false
 auth_user: User # for server.py
 auth_pass: Pass # for server.py
+use_video_port: false # change to true if using server.py
 ```
 
 ## Run
